@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "dotenv": "^16.4.5",
-    "inquirer": "^9.2.16"
+    "inquirer": "^9.2.16",
+    "mysql2": "^3.9.2"
   },
   "scripts": {
     "start": "node server.js"
