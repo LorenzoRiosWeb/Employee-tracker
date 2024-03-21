@@ -1,4 +1,5 @@
 const inquirer = require('inquirer');
+const asciiart = require('asciiart-logo');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
@@ -119,33 +120,57 @@ async function addRole(connection) {
 
 async function addEmployee(connection) {
     try {
-        const [roles] = await connection.execute('SELECT id, title FROM roles');
+        const [roles] = await connection.query('SELECT id, title FROM roles');
+        const [departments] = await connection.query('SELECT id, name FROM departments');
 
-        const { firstName, lastName, roleId, managerId } = await inquirer.prompt([
+        const roleChoices = roles.map(role => ({
+            name: role.title,
+            value: role.id
+        }));
+
+        const departmentChoices = departments.map(department => ({
+            name: department.name,
+            value: department.id
+        }));
+
+        const employeeDetails = await inquirer.prompt([
             {
-                name: 'firstName',
+                name: 'first_name',
+                type: 'input',
                 message: 'Enter the first name of the employee:'
             },
             {
-                name: 'lastName',
+                name: 'last_name',
+                type: 'input',
                 message: 'Enter the last name of the employee:'
             },
             {
-                name: 'roleId',
+                name: 'role_id',
                 type: 'list',
-                message: 'Select the role for this employee:',
-                choices: roles.map(role => ({
-                    name: role.title,
-                    value: role.id
-                }))
+                message: 'Select the role of the employee:',
+                choices: roleChoices
             },
             {
-                name: 'managerId',
+                name: 'department_id',
+                type: 'list',
+                message: 'Select the department of the employee:',
+                choices: departmentChoices
+            },
+            {
+                name: 'manager_id',
+                type: 'input',
                 message: 'Enter the ID of the manager for this employee (leave blank if none):'
             }
         ]);
 
-        await connection.execute('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)', [firstName, lastName, roleId, managerId || null]);
+        await connection.query('INSERT INTO employees (first_name, last_name, role_id, department_id, manager_id) VALUES (?, ?, ?, ?, ?)', [
+            employeeDetails.first_name,
+            employeeDetails.last_name,
+            employeeDetails.role_id,
+            employeeDetails.department_id,
+            employeeDetails.manager_id || null
+        ]);
+
         console.log('Employee added successfully!');
     } catch (error) {
         console.error('Error adding employee:', error);
@@ -183,6 +208,22 @@ async function updateEmployeeRole(connection) {
 }
 
 async function main() {
+    try {
+        const logo = await asciiart({
+            name: 'Employee Tracker',
+            font: 'ANSI Shadow',
+            padding: 2,
+            margin: 2,
+            borderColor: 'yellow',
+            logoColor: 'bold-blue',
+            textColor: 'magenta'
+        });
+        console.log(logo.render());
+    } catch (error) {
+        console.error('Error generating ASCII art logo:', error);
+    }
+
+
     const connection = await connectToDatabase();
 
     while (true){
