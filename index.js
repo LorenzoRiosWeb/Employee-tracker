@@ -1,4 +1,3 @@
-
 const inquirer = require('inquirer');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
@@ -9,7 +8,6 @@ const dbConfig = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE
 };
-
 
 async function connectToDatabase() {
     try {
@@ -22,20 +20,18 @@ async function connectToDatabase() {
     }
 }
 
-// Create a function to view all departments
 async function viewAllDepartments(connection) {
     try {
-        const [rows] = await connection.query('SELECT * FROM departments');
+        const [rows] = await connection.execute('SELECT * FROM departments');
         console.table(rows);
     } catch (error) {
         console.error('Error fetching departments:', error);
     }
 }
 
-// Create a function to view all roles
 async function viewAllRoles(connection) {
     try {
-        const [rows] = await connection.query(`
+        const [rows] = await connection.execute(`
             SELECT 
                 employees.id,
                 employees.first_name,
@@ -55,10 +51,9 @@ async function viewAllRoles(connection) {
     }
 }
 
-// Create function to view all employees
 async function viewAllEmployees(connection) {
     try {
-        const [rows] = await connection.query(`
+        const [rows] = await connection.execute(`
             SELECT 
                 employees.id,
                 employees.first_name,
@@ -78,28 +73,22 @@ async function viewAllEmployees(connection) {
     }
 }
 
-// Function to add a department
-
-// Function to add department
 async function addDepartment(connection) {
     const { name } = await inquirer.prompt({
         name: 'name',
         message: 'Enter the name of the department:'
     });
     try {
-        await connection.query('INSERT INTO departments (name) VALUES (?)', [name]);
+        await connection.execute('INSERT INTO departments (name) VALUES (?)', [name]);
         console.log('Department added successfully!');
     } catch (error) {
         console.error('Error adding department:', error);
     }
 }
-// Create function to add role
-async function addRole(connection) {
-    
-      // Fetches existing departments to display choices
 
+async function addRole(connection) {
     try {
-        const [departments] = await connection.query('SELECT id, name FROM departments');
+        const [departments] = await connection.execute('SELECT id, name FROM departments');
 
         const { title, salary, departmentId } = await inquirer.prompt([
             {
@@ -121,17 +110,16 @@ async function addRole(connection) {
             }
         ]);
 
-        await connection.query('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)', [title, salary, departmentId]);
+        await connection.execute('INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)', [title, salary, departmentId]);
         console.log('Role added successfully!');
     } catch (error) {
         console.error('Error adding role:', error);
     }
 }
 
-// add employee functio
 async function addEmployee(connection) {
     try {
-        const [roles] = await connection.query('SELECT id, title FROM roles');
+        const [roles] = await connection.execute('SELECT id, title FROM roles');
 
         const { firstName, lastName, roleId, managerId } = await inquirer.prompt([
             {
@@ -157,17 +145,16 @@ async function addEmployee(connection) {
             }
         ]);
 
-        await connection.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)', [firstName, lastName, roleId, managerId || null]);
+        await connection.execute('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)', [firstName, lastName, roleId, managerId || null]);
         console.log('Employee added successfully!');
     } catch (error) {
         console.error('Error adding employee:', error);
     }
 }
 
-// Function to update an employee role
 async function updateEmployeeRole(connection) {
     try {
-        const [employees] = await connection.query('SELECT id, first_name, last_name FROM employees');
+        const [employees] = await connection.execute('SELECT id, first_name, last_name FROM employees');
 
         const employeeChoices = employees.map(employee => ({
             name: `${employee.first_name} ${employee.last_name}`,
@@ -188,15 +175,13 @@ async function updateEmployeeRole(connection) {
             }
         ]);
 
-        await connection.query('UPDATE employees SET role_id = ? WHERE id = ?', [roleId, employeeId]);
+        await connection.execute('UPDATE employees SET role_id = ? WHERE id = ?', [roleId, employeeId]);
         console.log('Employee role updated successfully!');
     } catch (error) {
         console.error('Error updating employee role:', error);
     }
 }
 
-// Main function
-// main function
 async function main() {
     const connection = await connectToDatabase();
 
@@ -210,9 +195,9 @@ async function main() {
                 'View all Roles',
                 'View all Employees',
                 'Add Department',
+                'Add Role',
                 'Add Employee',
                 'Update Employee Role',
-                'View all Departments', // This line should be 'View all Roles' instead of 'View all Departments'
                 'Quit'
             ]
         });
@@ -246,3 +231,4 @@ async function main() {
     }
 }
 
+main();
