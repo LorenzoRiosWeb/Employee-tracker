@@ -161,10 +161,16 @@ async function addEmployee(connection) {
 async function updateEmployeeRole(connection) {
     try {
         const [employees] = await connection.execute('SELECT id, first_name, last_name FROM employees');
+        const [roles] = await connection.execute('SELECT id, title FROM roles');
 
         const employeeChoices = employees.map(employee => ({
             name: `${employee.first_name} ${employee.last_name}`,
             value: employee.id
+        }));
+
+        const roleChoices = roles.map(role => ({
+            name: role.title,
+            value: role.id
         }));
 
         const { employeeId, roleId } = await inquirer.prompt([
@@ -176,8 +182,9 @@ async function updateEmployeeRole(connection) {
             },
             {
                 name: 'roleId',
-                type: 'input',
-                message: 'Enter the ID of the new role for this employee:'
+                type: 'list',  // Change the input type to 'list'
+                message: 'Select the new role for this employee:',
+                choices: roleChoices
             }
         ]);
 
