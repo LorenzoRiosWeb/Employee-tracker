@@ -34,23 +34,18 @@ async function viewAllRoles(connection) {
     try {
         const [rows] = await connection.execute(`
             SELECT 
-                employees.id,
-                employees.first_name,
-                employees.last_name,
                 roles.title AS role,
-                departments.name AS department,
-                roles.salary,
-                CONCAT(managers.first_name, ' ', managers.last_name) AS manager
-            FROM employees
-            LEFT JOIN roles ON employees.role_id = roles.id
+                departments.name AS department
+            FROM roles
             LEFT JOIN departments ON roles.department_id = departments.id
-            LEFT JOIN employees AS managers ON employees.manager_id = managers.id
         `);
         console.table(rows);
     } catch (error) {
         console.error('Error fetching roles:', error);
     }
 }
+
+
 
 async function viewAllEmployees(connection) {
     try {
@@ -60,12 +55,10 @@ async function viewAllEmployees(connection) {
                 employees.first_name,
                 employees.last_name,
                 roles.title AS role,
-                departments.name AS department,
                 roles.salary,
                 CONCAT(managers.first_name, ' ', managers.last_name) AS manager
             FROM employees
             LEFT JOIN roles ON employees.role_id = roles.id
-            LEFT JOIN departments ON roles.department_id = departments.id
             LEFT JOIN employees AS managers ON employees.manager_id = managers.id
         `);
         console.table(rows);
@@ -121,16 +114,10 @@ async function addRole(connection) {
 async function addEmployee(connection) {
     try {
         const [roles] = await connection.query('SELECT id, title FROM roles');
-        const [departments] = await connection.query('SELECT id, name FROM departments');
 
         const roleChoices = roles.map(role => ({
             name: role.title,
             value: role.id
-        }));
-
-        const departmentChoices = departments.map(department => ({
-            name: department.name,
-            value: department.id
         }));
 
         const employeeDetails = await inquirer.prompt([
@@ -151,23 +138,16 @@ async function addEmployee(connection) {
                 choices: roleChoices
             },
             {
-                name: 'department_id',
-                type: 'list',
-                message: 'Select the department of the employee:',
-                choices: departmentChoices
-            },
-            {
                 name: 'manager_id',
                 type: 'input',
                 message: 'Enter the ID of the manager for this employee (leave blank if none):'
             }
         ]);
 
-        await connection.query('INSERT INTO employees (first_name, last_name, role_id, department_id, manager_id) VALUES (?, ?, ?, ?, ?)', [
+        await connection.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)', [
             employeeDetails.first_name,
             employeeDetails.last_name,
             employeeDetails.role_id,
-            employeeDetails.department_id,
             employeeDetails.manager_id || null
         ]);
 
@@ -176,6 +156,7 @@ async function addEmployee(connection) {
         console.error('Error adding employee:', error);
     }
 }
+
 
 async function updateEmployeeRole(connection) {
     try {
